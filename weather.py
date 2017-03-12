@@ -4,6 +4,7 @@
 
 import urllib2
 import sys
+from bs4 import BeautifulSoup
 
 api_key = None
 
@@ -28,17 +29,32 @@ class WeatherHourly(object):
         data = fitxer.read()
         fitxer.close()
 
-        return data
+        soup = BeautifulSoup(data, 'lxml')
+        forecast = soup.find_all("forecast")
+
+        max_hores = proximes_hores
+        j = 0
+        for i in forecast:
+            if j >= int(max_hores):
+                break
+
+            hora = "A les " + i.find("hour").text
+            temperatura = " la temperatura sera " + i.find("temp").find("metric").text
+            sensacio_temp = ". Pero amb una sensacio termica de " + (i.find("feelslike").find("metric").text)
+            cel = " i amb un cel " + i.find("wx").text
+            print hora + temperatura + sensacio_temp + cel
+
+            j = j+1
 
 
 if __name__ == "__main__":
     if not api_key:
         try:
             api_key = sys.argv[1]
-            # hora =  raw_input("Escriu les hores:")
+            proximes_hores = raw_input("Escriu el numero de les hores que vols saber la prediccio: ")
         except IndexError:
             print "API key must be in CLI option"
 
+    print "Es tindra una prediccio de les proximes " + proximes_hores + " hores."
     wc = WeatherHourly(api_key)
-    resultat = wc.hourly("Lleida")
-    print resultat
+    wc.hourly("Lleida")
